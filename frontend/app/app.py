@@ -15,7 +15,6 @@ st.session_state.action = st.selectbox(label='What do you want to do today?',
                                                 'Create a meal plan'])
 
 if st.session_state.action == 'Upload a new recipie from a URL':
-    st.write("Upload a new recipie from a URL")
     url()
 elif st.session_state.action == 'Upload a new recipie from a file':
     st.write("Upload a new recipie from a file")
