@@ -1,8 +1,8 @@
 import sqlite3
 import mdpd
-from sqlalchemy import Integer, String
-
-from meals import dinner, lunch, snack
+from sqlalchemy import Integer, String, Float
+import pandas as pd
+from meals import dinner, lunch, snack, breakfast
 
 
 con = sqlite3.connect('staging.db')
@@ -48,23 +48,34 @@ def drop_tables(tables, connection):
 
     for table in tables:
         sql = f"""DROP TABLE {table}"""
-
-        cur.execute(sql)
+        try:
+            cur.execute(sql)
+        except sqlite3.OperationalError:
+            print("Table {} does not exist".format(table))
         print("Dropped table {}".format(table))
 
 
 def load_tables(connection):
-    data = {'DINNER': dinner, 'LUNCH': lunch, 'SNACK': snack}
+    data = {'DINNER': dinner, 'LUNCH': lunch, 'SNACK': snack, 'BREAKFAST': breakfast}
 
     for table, meals in data.items():
-        meals = meals.replace('**', '')
+        meals = meals.strip()
         df = mdpd.from_md(meals)
+        # Convert numeric columns
+        numeric_cols = ['CALORIES', 'PROTEIN (g)', 'FAT (g)', 'CARBS (g)', 'FIBRE (g)']
+        for col in numeric_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        # Convert text columns
+        text_cols = ['NAME', 'INGREDIENTS', 'METHOD']
+        for col in text_cols:
+            df[col] = df[col].astype(str)
 
         df.to_sql(table, con=connection, if_exists='replace', index=True)
 
 
 if __name__ == "__main__":
-    tables = ['LUNCH', 'SNACK', 'DINNER', 'MEAL_PLANS']
+    tables = ['LUNCH', 'SNACK', 'DINNER', 'BREAKFAST', 'MEAL_PLANS']
     drop_tables(tables, con)
     create_tables(con)
     load_tables(con)

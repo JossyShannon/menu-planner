@@ -21,4 +21,5 @@ elif st.session_state.action == 'Upload a new recipie from a file':
     file()
 elif st.session_state.action == 'Create a meal plan':
     st.write("Create a meal plan")
-    meal_plan()
+    plan = meal_plan()
+    st.table(plan[1])
